@@ -1,5 +1,8 @@
-HandPoseBarracuda
+HandPoseInference
 =================
+
+_Note: This is a Unity 6.3 compatible Unity AI Inference (2.2.2) port of Keijiro's **HandPoseBarracuda**_
+
 
 ![gif](https://i.imgur.com/jvHmCMc.gif)
 ![gif](https://i.imgur.com/KZmAcPa.gif)
