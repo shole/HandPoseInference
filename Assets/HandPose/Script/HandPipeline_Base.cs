@@ -17,6 +17,7 @@ sealed partial class HandPipeline : System.IDisposable
     int InputWidth => _detector.palm.ImageSize;
 
     ResourceSet _resources;
+    int _maxHands;
     (PalmDetector palm, HandLandmarkDetector landmark) _detector;
     (ComputeBuffer region, ComputeBuffer filter) _buffer;
     GlobalKeyword _keywordNchw;
@@ -25,21 +26,24 @@ sealed partial class HandPipeline : System.IDisposable
 
     #region Object allocation/deallocation
 
-    void AllocateObjects(ResourceSet resources)
+    void AllocateObjects(ResourceSet resources, int maxHands)
     {
         _resources = resources;
+        _maxHands = maxHands;
 
         _detector = (new PalmDetector(_resources.blazePalm),
                      new HandLandmarkDetector(_resources.handLandmark));
 
         var regionStructSize = sizeof(float) * 24;
-        var filterBufferLength = HandLandmarkDetector.VertexCount * 2;
+        var filterBufferLength = HandLandmarkDetector.VertexCount * 2 * _maxHands;
 
-        _buffer = (new ComputeBuffer(1, regionStructSize),
+        _buffer = (new ComputeBuffer(_maxHands, regionStructSize),
                    new ComputeBuffer(filterBufferLength, sizeof(float) * 4));
 
         _keywordNchw = GlobalKeyword.Create("NCHW_INPUT");
         Shader.SetKeyword(_keywordNchw, _detector.palm.InputIsNCHW);
+
+        InitReadCache();
     }
 
     void DeallocateObjects()

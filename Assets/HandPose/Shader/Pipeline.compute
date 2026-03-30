@@ -65,6 +65,7 @@ void spad_kernel(uint2 id : SV_DispatchThreadID)
 //
 
 float _bbox_dt;
+uint _bbox_hand_index;
 
 StructuredBuffer<PalmDetection> _bbox_palm;
 ByteAddressBuffer _bbox_count;
@@ -75,10 +76,10 @@ RWStructuredBuffer<HandRegion> _bbox_region;
 void bbox_kernel(uint id : SV_DispatchThreadID)
 {
     uint entry_count = _bbox_count.Load(0);
-    if (entry_count == 0) return;
+    if (_bbox_hand_index >= entry_count) return;
 
     // Input from the palm detection model
-    const PalmDetection palm = _bbox_palm[0];
+    const PalmDetection palm = _bbox_palm[_bbox_hand_index];
 
     // Palm region size (squarified and enlarged bounding box)
     float size = max(palm.extent.x, palm.extent.y) * 3;
@@ -88,7 +89,7 @@ void bbox_kernel(uint id : SV_DispatchThreadID)
     float angle = atan2(up.y, up.x) - PI / 2;
 
     // Hand region structure. We're going to update this.
-    HandRegion region = _bbox_region[0];
+    HandRegion region = _bbox_region[_bbox_hand_index];
 
     // Low pass filter parameters and input vector
     const float3 lpf_params = float3(2, 1.5f, _bbox_dt);
@@ -105,7 +106,7 @@ void bbox_kernel(uint id : SV_DispatchThreadID)
     region.cropMatrix = mul(mul(mul(mul(m1, m2), m3), m4), m5);
 
     // Compute buffer update
-    _bbox_region[0] = region;
+    _bbox_region[_bbox_hand_index] = region;
 }
 
 //
@@ -113,6 +114,8 @@ void bbox_kernel(uint id : SV_DispatchThreadID)
 //
 
 #define CROP_IMAGE_SIZE 224
+
+uint _crop_hand_index;
 
 sampler2D _crop_input;
 StructuredBuffer<HandRegion> _crop_region;
@@ -122,7 +125,7 @@ RWStructuredBuffer<float> _crop_output;
 [numthreads(8, 8, 1)]
 void crop_kernel(uint2 id : SV_DispatchThreadID)
 {
-    float4x4 xform = _crop_region[0].cropMatrix;
+    float4x4 xform = _crop_region[_crop_hand_index].cropMatrix;
 
     // UV coordinates
     float2 uv = (id + 0.5) / CROP_IMAGE_SIZE;
@@ -160,6 +163,7 @@ void crop_kernel(uint2 id : SV_DispatchThreadID)
 
 float _post_dt;
 float _post_scale;
+uint _post_hand_index;
 
 StructuredBuffer<float4> _post_input;
 StructuredBuffer<HandRegion> _post_region;
@@ -169,11 +173,13 @@ RWStructuredBuffer<float4> _post_output;
 [numthreads(POST_KEYPOINT_COUNT, 1, 1)]
 void post_kernel(uint id : SV_DispatchThreadID)
 {
-    HandRegion region = _post_region[0];
+    HandRegion region = _post_region[_post_hand_index];
+
+    uint hand_offset = POST_KEYPOINT_COUNT * 2 * _post_hand_index;
 
     float3 x = _post_input[id + 1].xyz;
-    float3 p_x = _post_output[id].xyz;
-    float3 p_dx = _post_output[id + POST_KEYPOINT_COUNT].xyz;
+    float3 p_x = _post_output[id + hand_offset].xyz;
+    float3 p_dx = _post_output[id + POST_KEYPOINT_COUNT + hand_offset].xyz;
 
     x = mul(region.cropMatrix, float4(x, 1)).xyz;
     x.xy = (x.xy - 0.5) * _post_scale;
@@ -182,6 +188,6 @@ void post_kernel(uint id : SV_DispatchThreadID)
     float3 dx = lpf_Step_dx(x, p_x, p_dx, lpf_params);
     x = lpf_Step_x(x, p_x, dx, lpf_params);
 
-    _post_output[id] = float4(x, 1);
-    _post_output[id + POST_KEYPOINT_COUNT] = float4(dx, 1);
+    _post_output[id + hand_offset] = float4(x, 1);
+    _post_output[id + POST_KEYPOINT_COUNT + hand_offset] = float4(dx, 1);
 }

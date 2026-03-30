@@ -27,29 +27,40 @@ partial class HandPipeline
         // Palm detection
         _detector.palm.ProcessInput();
 
-        // Hand region bounding box update
+        // Debug: log each detected palm
+        var detections = _detector.palm.Detections;
+        for (var i = 0; i < detections.Length; i++)
+            Debug.Log($"[HandPipeline] Palm [{i}] score={detections[i].score:F2} center={detections[i].center}");
+
+        // Per-hand: region update → crop → landmark inference → postprocess
         cs.SetFloat("_bbox_dt", Time.deltaTime);
         cs.SetBuffer(1, "_bbox_count", _detector.palm.CountBuffer);
         cs.SetBuffer(1, "_bbox_palm", _detector.palm.DetectionBuffer);
         cs.SetBuffer(1, "_bbox_region", _buffer.region);
-        cs.Dispatch(1, 1, 1, 1);
 
-        // Hand region cropping
         cs.SetTexture(2, "_crop_input", input);
         cs.SetBuffer(2, "_crop_region", _buffer.region);
         cs.SetBuffer(2, "_crop_output", _detector.landmark.InputBuffer);
-        cs.Dispatch(2, CropSize / 8, CropSize / 8, 1);
 
-        // Hand landmark detection
-        _detector.landmark.ProcessInput();
-
-        // Key point postprocess
         cs.SetFloat("_post_dt", Time.deltaTime);
         cs.SetFloat("_post_scale", scale.y);
         cs.SetBuffer(3, "_post_input", _detector.landmark.OutputBuffer);
         cs.SetBuffer(3, "_post_region", _buffer.region);
         cs.SetBuffer(3, "_post_output", _buffer.filter);
-        cs.Dispatch(3, 1, 1, 1);
+
+        for (var hand = 0; hand < _maxHands; hand++)
+        {
+            cs.SetInt("_bbox_hand_index", hand);
+            cs.Dispatch(1, 1, 1, 1);
+
+            cs.SetInt("_crop_hand_index", hand);
+            cs.Dispatch(2, CropSize / 8, CropSize / 8, 1);
+
+            _detector.landmark.ProcessInput();
+
+            cs.SetInt("_post_hand_index", hand);
+            cs.Dispatch(3, 1, 1, 1);
+        }
 
         // Read cache invalidation
         InvalidateReadCache();

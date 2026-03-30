@@ -22,11 +22,11 @@ partial class HandPipeline
         Pinky1,  Pinky2,  Pinky3,  Pinky4
     }
 
-    public Vector3 GetKeyPoint(KeyPoint point)
-      => ReadCache[(int)point];
+    public Vector3 GetKeyPoint(KeyPoint point, int handIndex = 0)
+      => ReadCache[handIndex * KeyPointCount * 2 + (int)point];
 
-    public Vector3 GetKeyPoint(int index)
-      => ReadCache[index];
+    public Vector3 GetKeyPoint(int index, int handIndex = 0)
+      => ReadCache[handIndex * KeyPointCount * 2 + index];
 
     #endregion
 
@@ -47,8 +47,10 @@ partial class HandPipeline
 
     public bool UseAsyncReadback { get; set; } = true;
 
-    public HandPipeline(ResourceSet resources)
-      => AllocateObjects(resources);
+    public int MaxHands => _maxHands;
+
+    public HandPipeline(ResourceSet resources, int maxHands = 2)
+      => AllocateObjects(resources, maxHands);
 
     public void Dispose()
       => DeallocateObjects();

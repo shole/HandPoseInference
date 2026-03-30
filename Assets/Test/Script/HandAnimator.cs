@@ -19,6 +19,9 @@ public sealed class HandAnimator : MonoBehaviour
     [SerializeField] Material _boneMaterial = null;
     [Space]
     [SerializeField] RawImage _monitorUI = null;
+    [Space]
+    [Range(1,32)]
+    [SerializeField] int _handCount = 2;
 
     #endregion
 
@@ -56,7 +59,7 @@ public sealed class HandAnimator : MonoBehaviour
     #region MonoBehaviour implementation
 
     void Start()
-      => _pipeline = new HandPipeline(_resources);
+      => _pipeline = new HandPipeline(_resources, _handCount);
 
     void OnDestroy()
       => _pipeline.Dispose();
@@ -69,20 +72,23 @@ public sealed class HandAnimator : MonoBehaviour
 
         var layer = gameObject.layer;
 
-        // Joint balls
-        for (var i = 0; i < HandPipeline.KeyPointCount; i++)
+        for (var hand = 0; hand < _pipeline.MaxHands; hand++)
         {
-            var xform = CalculateJointXform(_pipeline.GetKeyPoint(i));
-            Graphics.DrawMesh(_jointMesh, xform, _jointMaterial, layer);
-        }
+            // Joint balls
+            for (var i = 0; i < HandPipeline.KeyPointCount; i++)
+            {
+                var xform = CalculateJointXform(_pipeline.GetKeyPoint(i, hand));
+                Graphics.DrawMesh(_jointMesh, xform, _jointMaterial, layer);
+            }
 
-        // Bones
-        foreach (var pair in BonePairs)
-        {
-            var p1 = _pipeline.GetKeyPoint(pair.Item1);
-            var p2 = _pipeline.GetKeyPoint(pair.Item2);
-            var xform = CalculateBoneXform(p1, p2);
-            Graphics.DrawMesh(_boneMesh, xform, _boneMaterial, layer);
+            // Bones
+            foreach (var pair in BonePairs)
+            {
+                var p1 = _pipeline.GetKeyPoint(pair.Item1, hand);
+                var p2 = _pipeline.GetKeyPoint(pair.Item2, hand);
+                var xform = CalculateBoneXform(p1, p2);
+                Graphics.DrawMesh(_boneMesh, xform, _boneMaterial, layer);
+            }
         }
 
         // UI update

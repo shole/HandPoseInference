@@ -9,6 +9,7 @@ Shader "Hidden/MediaPipe/HandPose/Visualizer/KeyPoint"
     #include "UnityCG.cginc"
 
     StructuredBuffer<float4> _KeyPoints;
+    uint _HandKeyPointOffset;
 
     // Coloring function
     float3 DepthToColor(float z)
@@ -25,7 +26,7 @@ Shader "Hidden/MediaPipe/HandPose/Visualizer/KeyPoint"
                     out float4 position : SV_Position,
                     out float4 color : COLOR)
     {
-        float3 p = _KeyPoints[iid].xyz;
+        float3 p = _KeyPoints[_HandKeyPointOffset + iid].xyz;
 
         uint fan = vid / 3;
         uint segment = vid % 3;
@@ -54,7 +55,7 @@ Shader "Hidden/MediaPipe/HandPose/Visualizer/KeyPoint"
 
         i = max(segment, vid) == 0 ? root : i;
 
-        float3 p = _KeyPoints[i].xyz;
+        float3 p = _KeyPoints[_HandKeyPointOffset + i].xyz;
 
         position = UnityObjectToClipPos(float4(p, 1));
         color = float4(DepthToColor(p.z), 0.8);

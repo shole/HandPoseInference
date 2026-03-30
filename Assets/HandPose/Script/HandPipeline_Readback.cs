@@ -11,15 +11,21 @@ sealed partial class HandPipeline
 {
     #region Read cache operations
 
-    Vector4[] _readCache = new Vector4[KeyPointCount];
+    Vector4[] _readCache;
     bool _readFlag;
+
+    int TotalKeyPointCount => KeyPointCount * 2 * _maxHands;
+    int ReadbackBytes => TotalKeyPointCount * sizeof(float) * 4;
+
+    void InitReadCache()
+      => _readCache = new Vector4[TotalKeyPointCount];
 
     Vector4[] ReadCache
       => (_readFlag || UseAsyncReadback) ? _readCache : UpdateReadCache();
 
     Vector4[] UpdateReadCache()
     {
-        _buffer.filter.GetData(_readCache, 0, 0, KeyPointCount);
+        _buffer.filter.GetData(_readCache, 0, 0, TotalKeyPointCount);
         _readFlag = true;
         return _readCache;
     }
@@ -36,8 +42,6 @@ sealed partial class HandPipeline
     #endregion
 
     #region GPU async operation callback
-
-    const int ReadbackBytes = KeyPointCount * sizeof(float) * 4;
 
     System.Action<AsyncGPUReadbackRequest> ReadbackCompleteAction
       => OnReadbackComplete;

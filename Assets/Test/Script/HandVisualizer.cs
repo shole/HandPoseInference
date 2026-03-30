@@ -15,6 +15,9 @@ public sealed class HandVisualizer : MonoBehaviour
     [Space]
     [SerializeField] RawImage _mainUI = null;
     [SerializeField] RawImage _cropUI = null;
+    [Space]
+    [Range(1,32)]
+    [SerializeField] int _handCount = 2;
 
     #endregion
 
@@ -29,7 +32,7 @@ public sealed class HandVisualizer : MonoBehaviour
 
     void Start()
     {
-        _pipeline = new HandPipeline(_resources);
+        _pipeline = new HandPipeline(_resources, _handCount);
         _material = (new Material(_keyPointShader),
                      new Material(_handRegionShader));
 
@@ -60,13 +63,19 @@ public sealed class HandVisualizer : MonoBehaviour
 
     void OnRenderObject()
     {
-        // Key point circles
-        _material.keys.SetPass(0);
-        Graphics.DrawProceduralNow(MeshTopology.Triangles, 96, 21);
+        for (var hand = 0; hand < _pipeline.MaxHands; hand++)
+        {
+            // Offset into the filter buffer: each hand occupies KeyPointCount * 2 float4s
+            _material.keys.SetInt("_HandKeyPointOffset", hand * HandPipeline.KeyPointCount * 2);
 
-        // Skeleton lines
-        _material.keys.SetPass(1);
-        Graphics.DrawProceduralNow(MeshTopology.Lines, 2, 4 * 5 + 1);
+            // Key point circles
+            _material.keys.SetPass(0);
+            Graphics.DrawProceduralNow(MeshTopology.Triangles, 96, 21);
+
+            // Skeleton lines
+            _material.keys.SetPass(1);
+            Graphics.DrawProceduralNow(MeshTopology.Lines, 2, 4 * 5 + 1);
+        }
     }
 
     #endregion
