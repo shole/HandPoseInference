@@ -2,7 +2,7 @@ HandPoseInference
 =================
 
 _Note: This is a Unity 6.3 compatible Unity AI Inference (2.2.2) port of Keijiro's **HandPoseBarracuda**_
-
+- _The sample has been updated to support multiple hands_
 
 ![gif](https://i.imgur.com/jvHmCMc.gif)
 ![gif](https://i.imgur.com/KZmAcPa.gif)
@@ -19,9 +19,9 @@ the same basic design and the same pre-trained models.
 Note that this is just a proof-of-concept implementation. It lacks some
 essential features needed for practical applications:
 
-- **It only accepts a single hand.** Although you can reuse the most part of
+- ~**It only accepts a single hand.** Although you can reuse the most part of
   the implementation, you will need to redesign the system to support multiple
-  hands.
+  hands.~
 - **It only supports screen-space (2D) positions and relative depths from
   a palm.** You will need to implement a screen-to-world-space projector for 3D
   applications.
