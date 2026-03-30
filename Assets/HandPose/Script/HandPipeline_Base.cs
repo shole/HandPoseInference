@@ -22,6 +22,12 @@ sealed partial class HandPipeline : System.IDisposable
     (ComputeBuffer region, ComputeBuffer filter) _buffer;
     GlobalKeyword _keywordNchw;
 
+    // Per-slot tracking state for detection-to-hand assignment
+    UnityEngine.Vector2[] _trackCenter;
+    float[] _trackAngle;
+    float[] _trackLostTime;
+    bool _trackInitialized;
+
     #endregion
 
     #region Object allocation/deallocation
@@ -44,6 +50,12 @@ sealed partial class HandPipeline : System.IDisposable
         Shader.SetKeyword(_keywordNchw, _detector.palm.InputIsNCHW);
 
         InitReadCache();
+
+        _trackCenter = new UnityEngine.Vector2[_maxHands];
+        _trackAngle = new float[_maxHands];
+        _trackLostTime = new float[_maxHands];
+        for (var i = 0; i < _maxHands; i++) _trackLostTime[i] = float.PositiveInfinity;
+        _trackInitialized = false;
     }
 
     void DeallocateObjects()

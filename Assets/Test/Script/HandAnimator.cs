@@ -74,6 +74,8 @@ public sealed class HandAnimator : MonoBehaviour
 
         for (var hand = 0; hand < _pipeline.MaxHands; hand++)
         {
+            if (!_pipeline.IsTracked(hand)) continue;
+
             // Joint balls
             for (var i = 0; i < HandPipeline.KeyPointCount; i++)
             {

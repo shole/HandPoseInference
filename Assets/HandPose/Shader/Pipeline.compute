@@ -65,7 +65,8 @@ void spad_kernel(uint2 id : SV_DispatchThreadID)
 //
 
 float _bbox_dt;
-uint _bbox_hand_index;
+uint _bbox_hand_index;  // region slot to write
+uint _bbox_palm_index;  // detection index to read (may differ from hand index after assignment)
 
 StructuredBuffer<PalmDetection> _bbox_palm;
 ByteAddressBuffer _bbox_count;
@@ -76,10 +77,10 @@ RWStructuredBuffer<HandRegion> _bbox_region;
 void bbox_kernel(uint id : SV_DispatchThreadID)
 {
     uint entry_count = _bbox_count.Load(0);
-    if (_bbox_hand_index >= entry_count) return;
+    if (_bbox_palm_index >= entry_count) return;
 
     // Input from the palm detection model
-    const PalmDetection palm = _bbox_palm[_bbox_hand_index];
+    const PalmDetection palm = _bbox_palm[_bbox_palm_index];
 
     // Palm region size (squarified and enlarged bounding box)
     float size = max(palm.extent.x, palm.extent.y) * 3;

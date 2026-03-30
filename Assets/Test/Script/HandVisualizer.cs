@@ -65,6 +65,8 @@ public sealed class HandVisualizer : MonoBehaviour
     {
         for (var hand = 0; hand < _pipeline.MaxHands; hand++)
         {
+            if (!_pipeline.IsTracked(hand)) continue;
+
             // Offset into the filter buffer: each hand occupies KeyPointCount * 2 float4s
             _material.keys.SetInt("_HandKeyPointOffset", hand * HandPipeline.KeyPointCount * 2);
 

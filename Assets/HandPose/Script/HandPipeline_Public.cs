@@ -49,8 +49,15 @@ partial class HandPipeline
 
     public int MaxHands => _maxHands;
 
-    public HandPipeline(ResourceSet resources, int maxHands = 2)
-      => AllocateObjects(resources, maxHands);
+    public float TrackingTimeout { get; set; } = 0.5f;
+
+    public bool IsTracked(int handIndex)
+      => _trackLostTime[handIndex] <= TrackingTimeout;
+
+    public HandPipeline(ResourceSet resources, int maxHands = 2, float trackingTimeout = 0.5f) {
+        TrackingTimeout = trackingTimeout;
+        AllocateObjects(resources, maxHands);
+    }
 
     public void Dispose()
       => DeallocateObjects();
