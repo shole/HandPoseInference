@@ -1,0 +1,17 @@
+{
+    "name": "MediaPipe.HandLandmark.Runtime",
+    "rootNamespace": "",
+    "references": [
+        "GUID:41c681fd50d45474baa3849629cd7f0f",
+        "GUID:63a57c8b658089e49a173b0f0c4870a7"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

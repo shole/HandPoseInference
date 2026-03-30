@@ -1,0 +1,15 @@
+{
+  "author": "Keijiro Takahashi",
+  "dependencies": {
+    "com.unity.ai.inference": "2.2.2",
+    "jp.keijiro.klak.nnutils": "3.0.2"
+  },
+  "description": "MediaPipe hand landmark detection neural network model for Unity AI Inference",
+  "displayName": "MediaPipe Hand Landmark",
+  "keywords": [ "unity" ],
+  "license": "Apache-2.0",
+  "name": "jp.keijiro.mediapipe.handlandmark",
+  "repository": "github:keijiro/HandLandmarkBarracuda",
+  "unity": "6000.0",
+  "version": "2.2.2"
+}
